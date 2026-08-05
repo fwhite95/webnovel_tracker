@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import '../bloc/new_entry/new_entry_bloc.dart';
-import '../bloc/new_entry/new_entry_event.dart';
-import '../bloc/new_entry/new_entry_state.dart';
-import 'entry_text_field.dart';
+import 'package:webnovel_tracker/features/entries/bloc/new_entry/new_entry_bloc.dart';
+import 'package:webnovel_tracker/features/entries/bloc/new_entry/new_entry_event.dart';
+import 'package:webnovel_tracker/features/entries/bloc/new_entry/new_entry_state.dart';
+import 'package:webnovel_tracker/shared/widgets/entry_text_field.dart';
 
 /// Bottom sheet for adding an entry. The user enters a URL; the bloc tries to
 /// fetch the title and save. If that fails, the editable fields are revealed.
@@ -32,11 +31,8 @@ class _NewEntryBottomSheetState extends State<NewEntryBottomSheet> {
     super.dispose();
   }
 
-  List<String> _parseTags(String raw) => raw
-      .split(',')
-      .map((t) => t.trim())
-      .where((t) => t.isNotEmpty)
-      .toList();
+  List<String> _parseTags(String raw) =>
+      raw.split(',').map((t) => t.trim()).where((t) => t.isNotEmpty).toList();
 
   void _submit() {
     context.read<NewEntryBloc>().add(

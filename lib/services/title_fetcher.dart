@@ -7,8 +7,7 @@ class TitleFetcher {
   const TitleFetcher();
 
   static const _timeout = Duration(seconds: 8);
-  static const _userAgent =
-      'Mozilla/5.0 (compatible; WebNovelTracker/1.0)';
+  static const _userAgent = 'Mozilla/5.0 (compatible; WebNovelTracker/1.0)';
 
   /// Fetches [url] and returns the trimmed contents of its `<title>` tag, or
   /// null if the URL is invalid, the request fails or times out, or the page

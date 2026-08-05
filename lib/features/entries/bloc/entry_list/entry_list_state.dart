@@ -1,7 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-
-import '../../../../data/database/app_database.dart';
-import '../../../../data/entry_repository.dart';
+import 'package:webnovel_tracker/data/database/app_database.dart';
+import 'package:webnovel_tracker/data/entry_repository.dart';
 
 part 'entry_list_state.freezed.dart';
 

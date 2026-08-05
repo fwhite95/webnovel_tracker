@@ -1,4 +1,4 @@
-import '../data/entry_repository.dart';
+import 'package:webnovel_tracker/data/entry_repository.dart';
 
 /// How an import reconciles with existing data.
 enum ImportMode { merge, replace }

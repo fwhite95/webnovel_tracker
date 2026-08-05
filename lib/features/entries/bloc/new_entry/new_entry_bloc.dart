@@ -1,11 +1,10 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
-
-import '../../../../data/database/app_database.dart';
-import '../../../../data/entry_repository.dart';
-import '../../../../services/title_fetcher.dart';
-import 'new_entry_event.dart';
-import 'new_entry_state.dart';
+import 'package:webnovel_tracker/data/database/app_database.dart';
+import 'package:webnovel_tracker/data/entry_repository.dart';
+import 'package:webnovel_tracker/features/entries/bloc/new_entry/new_entry_event.dart';
+import 'package:webnovel_tracker/features/entries/bloc/new_entry/new_entry_state.dart';
+import 'package:webnovel_tracker/services/title_fetcher.dart';
 
 /// Backs the "new entry" bottom sheet. Given a URL it tries to fetch the page
 /// title and save straight away; if that fails it asks the view to reveal the

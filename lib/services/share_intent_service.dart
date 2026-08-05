@@ -7,10 +7,12 @@ import 'package:flutter/services.dart';
 /// cold-start case (app launched by a share) and the warm case (app already
 /// running). Emitted URLs are routed to the share-capture bottom sheet.
 class ShareIntentService {
-  static const MethodChannel _method =
-      MethodChannel('app.webnovel_tracker/share');
-  static const EventChannel _events =
-      EventChannel('app.webnovel_tracker/share/events');
+  static const MethodChannel _method = MethodChannel(
+    'app.webnovel_tracker/share',
+  );
+  static const EventChannel _events = EventChannel(
+    'app.webnovel_tracker/share/events',
+  );
 
   /// Returns the URL the app was cold-launched with via a share, if any.
   static Future<String?> initialSharedUrl() {

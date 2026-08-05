@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
-import '../../../data/database/app_database.dart';
+import 'package:webnovel_tracker/data/database/app_database.dart';
 
 /// A single entry rendered as a card: title, url, tag chips, date added.
 /// Tapping opens the URL in the external browser; trailing icon buttons
@@ -139,9 +138,9 @@ class _TagChip extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: colors.onSecondaryContainer,
-        ),
+        style: Theme.of(
+          context,
+        ).textTheme.labelSmall?.copyWith(color: colors.onSecondaryContainer),
       ),
     );
   }

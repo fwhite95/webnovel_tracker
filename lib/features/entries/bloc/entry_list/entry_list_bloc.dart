@@ -1,11 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import '../../../../data/database/app_database.dart';
-import '../../../../data/entry_repository.dart';
-import 'entry_list_event.dart';
-import 'entry_list_state.dart';
+import 'package:webnovel_tracker/data/database/app_database.dart';
+import 'package:webnovel_tracker/data/entry_repository.dart';
+import 'package:webnovel_tracker/features/entries/bloc/entry_list/entry_list_event.dart';
+import 'package:webnovel_tracker/features/entries/bloc/entry_list/entry_list_state.dart';
 
 /// Drives the home list: subscribes to the repository stream, and applies
 /// sort / tag-filter changes. Depends only on [EntryRepository].

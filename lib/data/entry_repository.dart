@@ -1,6 +1,5 @@
 import 'package:drift/drift.dart' show Value;
-
-import 'database/app_database.dart';
+import 'package:webnovel_tracker/data/database/app_database.dart';
 
 /// How to order the entry list.
 enum EntrySort { lastOpened, dateAdded }
@@ -17,13 +16,6 @@ class EntryRepository {
 
   /// Unfiltered, unsorted reactive stream of all entries. The bloc shapes it.
   Stream<List<Entry>> watchEntries() => _db.watchAllEntries();
-
-  /// Every distinct tag across all entries, sorted.
-  Future<List<String>> allTags() async {
-    final entries = await _db.getAllEntries();
-    final tags = <String>{for (final e in entries) ...e.tags};
-    return tags.toList()..sort();
-  }
 
   Future<Entry?> byId(String id) => _db.getEntry(id);
 

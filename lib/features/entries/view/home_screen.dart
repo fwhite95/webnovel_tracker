@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:webnovel_tracker/core/di.dart';
+import 'package:webnovel_tracker/features/entries/bloc/entry_list/entry_list_bloc.dart';
 import 'package:webnovel_tracker/features/entries/bloc/entry_list/entry_list_event.dart';
+import 'package:webnovel_tracker/features/entries/bloc/entry_list/entry_list_state.dart';
 import 'package:webnovel_tracker/features/entries/bloc/new_entry/new_entry_bloc.dart';
-import 'package:webnovel_tracker/features/entries/widgets/new_entry_bottom_sheet.dart';
-
-import '../bloc/entry_list/entry_list_bloc.dart';
-import '../widgets/entry_card.dart';
-import '../bloc/entry_list/entry_list_state.dart';
+import 'package:webnovel_tracker/features/entries/view/new_entry_bottom_sheet.dart';
+import 'package:webnovel_tracker/features/entries/widgets/entry_card.dart';
 
 /// Home screen: the list of tracked entries.
 ///
 /// Reads [EntryListState] via [BlocBuilder]; sort/filter dispatch events to
-/// [EntryListBloc]. FAB -> AddEditScreen; overflow -> export / import.
+/// [EntryListBloc]. FAB -> [NewEntryBottomSheet]; overflow -> export / import.
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -34,7 +33,8 @@ class HomeScreen extends StatelessWidget {
                 final entry = state.entries[index];
                 return EntryCard(
                   entry: entry,
-                  // TODO: onTap -> open URL, onEdit -> AddEditScreen.
+                  // TODO: onTap -> open URL via url_launcher + mark opened,
+                  // onEdit -> the entry form sheet.
                   onDelete: () => context.read<EntryListBloc>().add(
                     EntryListEvent.entryDeleted(entry.id),
                   ),

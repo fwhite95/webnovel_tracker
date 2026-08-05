@@ -25,8 +25,9 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
             <!-- Appear in the Android share sheet for shared URLs / text.
-                 Consumed by receive_sharing_intent. text/plain covers URLs
-                 shared from browsers; text/* covers other text payloads. -->
+                 Handled by the MethodChannel/EventChannel bridge in
+                 MainActivity.kt. text/plain covers URLs shared from browsers;
+                 text/* covers other text payloads. -->
             <intent-filter>
                 <action android:name="android.intent.action.SEND"/>
                 <category android:name="android.intent.category.DEFAULT"/>

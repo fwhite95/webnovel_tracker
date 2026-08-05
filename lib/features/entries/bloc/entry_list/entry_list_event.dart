@@ -1,7 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-
-import '../../../../data/database/app_database.dart';
-import '../../../../data/entry_repository.dart';
+import 'package:webnovel_tracker/data/database/app_database.dart';
+import 'package:webnovel_tracker/data/entry_repository.dart';
 
 part 'entry_list_event.freezed.dart';
 
@@ -10,7 +9,8 @@ sealed class EntryListEvent with _$EntryListEvent {
   /// Start listening to the repository stream.
   const factory EntryListEvent.started() = EntryListStarted;
 
-  const factory EntryListEvent.sortChanged(EntrySort sort) = EntryListSortChanged;
+  const factory EntryListEvent.sortChanged(EntrySort sort) =
+      EntryListSortChanged;
 
   const factory EntryListEvent.tagFilterChanged(String? tag) =
       EntryListTagFilterChanged;
