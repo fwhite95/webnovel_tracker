@@ -4,10 +4,10 @@ import 'package:webnovel_tracker/core/di.dart';
 import 'package:webnovel_tracker/features/entries/bloc/entry_list/entry_list_bloc.dart';
 import 'package:webnovel_tracker/features/entries/bloc/entry_list/entry_list_event.dart';
 import 'package:webnovel_tracker/features/entries/view/home_screen.dart';
+import 'package:webnovel_tracker/features/entries/view/new_entry_bottom_sheet.dart';
 import 'package:webnovel_tracker/features/share_capture/bloc/share_capture_bloc.dart';
 import 'package:webnovel_tracker/features/share_capture/bloc/share_capture_event.dart';
 import 'package:webnovel_tracker/features/share_capture/bloc/share_capture_state.dart';
-import 'package:webnovel_tracker/features/share_capture/view/share_capture_sheet.dart';
 
 class WebNovelTrackerApp extends StatelessWidget {
   const WebNovelTrackerApp({super.key});
@@ -30,7 +30,10 @@ class WebNovelTrackerApp extends StatelessWidget {
           child: BlocListener<ShareCaptureBloc, ShareCaptureState>(
             listenWhen: (prev, curr) => curr.pendingUrl != null,
             listener: (context, state) async {
-              await ShareCaptureSheet.show(context, state.pendingUrl!);
+              await NewEntryBottomSheet.show(
+                context,
+                initialUrl: state.pendingUrl,
+              );
               if (!context.mounted) return;
               context.read<ShareCaptureBloc>().add(
                 const ShareCaptureEvent.handled(),

@@ -1,16 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:webnovel_tracker/core/di.dart';
 import 'package:webnovel_tracker/features/entries/bloc/new_entry/new_entry_bloc.dart';
 import 'package:webnovel_tracker/features/entries/bloc/new_entry/new_entry_event.dart';
 import 'package:webnovel_tracker/features/entries/bloc/new_entry/new_entry_state.dart';
 import 'package:webnovel_tracker/shared/widgets/entry_text_field.dart';
 
+import 'package:webnovel_tracker/shared/widgets/grab_handle.dart';
+
 /// Bottom sheet for adding an entry. The user enters a URL; the bloc tries to
 /// fetch the title and save. If that fails, the editable fields are revealed.
 ///
-/// Expects a [NewEntryBloc] provided above it (see [HomeScreen]).
+/// [initialUrl] pre-fills the URL — that's the share-intent path, where the URL
+/// arrives from outside the app and only needs confirming. Both paths are the
+/// same form, so they share the busy / error / fetch-fallback handling.
 class NewEntryBottomSheet extends StatefulWidget {
-  const NewEntryBottomSheet({super.key});
+  const NewEntryBottomSheet({super.key, this.initialUrl});
+
+  /// URL to start with, or null to start empty and focus the field.
+  final String? initialUrl;
+
+  /// Presents the sheet with its own [NewEntryBloc]. The bloc is a factory
+  /// registration, so every presentation starts from a clean state.
+  static Future<void> show(BuildContext context, {String? initialUrl}) {
+    return showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => BlocProvider(
+        create: (_) => getIt<NewEntryBloc>(),
+        child: NewEntryBottomSheet(initialUrl: initialUrl),
+      ),
+    );
+  }
 
   @override
   State<NewEntryBottomSheet> createState() => _NewEntryBottomSheetState();
@@ -21,6 +42,12 @@ class _NewEntryBottomSheetState extends State<NewEntryBottomSheet> {
   final _titleController = TextEditingController();
   final _tagsController = TextEditingController();
   final _progressController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _urlController.text = widget.initialUrl ?? '';
+  }
 
   @override
   void dispose() {
@@ -50,6 +77,7 @@ class _NewEntryBottomSheetState extends State<NewEntryBottomSheet> {
     final theme = Theme.of(context);
     final media = MediaQuery.of(context);
     final maxHeight = media.size.height * 2 / 3;
+    final fromShare = widget.initialUrl != null;
 
     return BlocConsumer<NewEntryBloc, NewEntryState>(
       listenWhen: (prev, curr) => prev.status != curr.status,
@@ -74,9 +102,12 @@ class _NewEntryBottomSheetState extends State<NewEntryBottomSheet> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Center(child: _GrabHandle()),
+                  const Center(child: GrabHandle()),
                   const SizedBox(height: 16),
-                  Text('New entry', style: theme.textTheme.titleLarge),
+                  Text(
+                    fromShare ? 'Save shared link' : 'New entry',
+                    style: theme.textTheme.titleLarge,
+                  ),
                   const SizedBox(height: 16),
                   EntryTextField(
                     controller: _urlController,
@@ -87,7 +118,9 @@ class _NewEntryBottomSheetState extends State<NewEntryBottomSheet> {
                     textInputAction: state.showDetails
                         ? TextInputAction.next
                         : TextInputAction.done,
-                    autofocus: true,
+                    // A shared URL is already filled in — don't raise the
+                    // keyboard just to confirm it.
+                    autofocus: !fromShare,
                     enabled: !busy,
                     onSubmitted: (_) {
                       if (!busy && !state.showDetails) _submit();
@@ -156,23 +189,6 @@ class _NewEntryBottomSheetState extends State<NewEntryBottomSheet> {
           ),
         );
       },
-    );
-  }
-}
-
-/// The little drag indicator at the top of the sheet.
-class _GrabHandle extends StatelessWidget {
-  const _GrabHandle();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 36,
-      height: 4,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.outlineVariant,
-        borderRadius: BorderRadius.circular(2),
-      ),
     );
   }
 }

@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:webnovel_tracker/core/di.dart';
 import 'package:webnovel_tracker/features/entries/bloc/entry_list/entry_list_bloc.dart';
 import 'package:webnovel_tracker/features/entries/bloc/entry_list/entry_list_event.dart';
 import 'package:webnovel_tracker/features/entries/bloc/entry_list/entry_list_state.dart';
-import 'package:webnovel_tracker/features/entries/bloc/new_entry/new_entry_bloc.dart';
 import 'package:webnovel_tracker/features/entries/view/new_entry_bottom_sheet.dart';
 import 'package:webnovel_tracker/features/entries/widgets/entry_card.dart';
 
@@ -46,16 +44,7 @@ class HomeScreen extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showModalBottomSheet<void>(
-            context: context,
-            isScrollControlled: true,
-            builder: (_) => BlocProvider(
-              create: (_) => getIt<NewEntryBloc>(),
-              child: const NewEntryBottomSheet(),
-            ),
-          );
-        },
+        onPressed: () => NewEntryBottomSheet.show(context),
         child: const Icon(Icons.add),
       ),
     );
