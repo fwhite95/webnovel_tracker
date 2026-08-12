@@ -4,6 +4,7 @@ import 'package:webnovel_tracker/core/di.dart';
 import 'package:webnovel_tracker/features/entries/bloc/new_entry/new_entry_bloc.dart';
 import 'package:webnovel_tracker/features/entries/bloc/new_entry/new_entry_event.dart';
 import 'package:webnovel_tracker/features/entries/bloc/new_entry/new_entry_state.dart';
+import 'package:webnovel_tracker/features/entries/widgets/duplicate_entry_form.dart';
 import 'package:webnovel_tracker/shared/widgets/entry_text_field.dart';
 
 import 'package:webnovel_tracker/shared/widgets/grab_handle.dart';
@@ -14,6 +15,10 @@ import 'package:webnovel_tracker/shared/widgets/grab_handle.dart';
 /// [initialUrl] pre-fills the URL — that's the share-intent path, where the URL
 /// arrives from outside the app and only needs confirming. Both paths are the
 /// same form, so they share the busy / error / fetch-fallback handling.
+///
+/// If the bloc finds an entry for the same novel, the sheet swaps its body for
+/// [DuplicateEntryForm] rather than opening a dialog — one route, so there's no
+/// second context to manage and dismissing the sheet cancels the whole thing.
 class NewEntryBottomSheet extends StatefulWidget {
   const NewEntryBottomSheet({super.key, this.initialUrl});
 
@@ -41,7 +46,7 @@ class _NewEntryBottomSheetState extends State<NewEntryBottomSheet> {
   final _urlController = TextEditingController();
   final _titleController = TextEditingController();
   final _tagsController = TextEditingController();
-  final _progressController = TextEditingController();
+  final _chapterController = TextEditingController();
 
   @override
   void initState() {
@@ -54,7 +59,7 @@ class _NewEntryBottomSheetState extends State<NewEntryBottomSheet> {
     _urlController.dispose();
     _titleController.dispose();
     _tagsController.dispose();
-    _progressController.dispose();
+    _chapterController.dispose();
     super.dispose();
   }
 
@@ -66,18 +71,16 @@ class _NewEntryBottomSheetState extends State<NewEntryBottomSheet> {
       NewEntryEvent.submitted(
         url: _urlController.text,
         title: _titleController.text,
+        chapter: _chapterController.text,
         tags: _parseTags(_tagsController.text),
-        progressNote: _progressController.text,
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final media = MediaQuery.of(context);
     final maxHeight = media.size.height * 2 / 3;
-    final fromShare = widget.initialUrl != null;
 
     return BlocConsumer<NewEntryBloc, NewEntryState>(
       listenWhen: (prev, curr) => prev.status != curr.status,
@@ -104,85 +107,22 @@ class _NewEntryBottomSheetState extends State<NewEntryBottomSheet> {
                 children: [
                   const Center(child: GrabHandle()),
                   const SizedBox(height: 16),
-                  Text(
-                    fromShare ? 'Save shared link' : 'New entry',
-                    style: theme.textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 16),
-                  EntryTextField(
-                    controller: _urlController,
-                    label: 'URL',
-                    hint: 'https://...',
-                    prefixIcon: Icons.link,
-                    keyboardType: TextInputType.url,
-                    textInputAction: state.showDetails
-                        ? TextInputAction.next
-                        : TextInputAction.done,
-                    // A shared URL is already filled in — don't raise the
-                    // keyboard just to confirm it.
-                    autofocus: !fromShare,
-                    enabled: !busy,
-                    onSubmitted: (_) {
-                      if (!busy && !state.showDetails) _submit();
-                    },
-                  ),
-                  if (state.showDetails) ...[
-                    const SizedBox(height: 12),
-                    EntryTextField(
-                      controller: _titleController,
-                      label: 'Title',
-                      enabled: !busy,
-                    ),
-                    const SizedBox(height: 12),
-                    EntryTextField(
-                      controller: _tagsController,
-                      label: 'Tags',
-                      hint: 'comma, separated',
-                      enabled: !busy,
-                    ),
-                    const SizedBox(height: 12),
-                    EntryTextField(
-                      controller: _progressController,
-                      label: 'Progress note',
-                      hint: 'e.g. ch. 47',
-                      enabled: !busy,
-                    ),
-                  ],
-                  if (state.errorMessage != null) ...[
-                    const SizedBox(height: 12),
-                    Text(
-                      state.errorMessage!,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.error,
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      if (!state.showDetails)
-                        TextButton(
-                          onPressed: busy
-                              ? null
-                              : () => context.read<NewEntryBloc>().add(
-                                  const NewEntryEvent.detailsRequested(),
+                  if (state.duplicate != null)
+                    DuplicateEntryForm(
+                      existing: state.duplicate!,
+                      pending: state.pending!,
+                      busy: busy,
+                      onResolved:
+                          ({required updateExisting, required chapter}) =>
+                              context.read<NewEntryBloc>().add(
+                                NewEntryEvent.duplicateResolved(
+                                  updateExisting: updateExisting,
+                                  chapter: chapter,
                                 ),
-                          child: const Text('Add details manually'),
-                        ),
-                      const Spacer(),
-                      FilledButton(
-                        onPressed: busy ? null : _submit,
-                        child: busy
-                            ? const SizedBox.square(
-                                dimension: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : Text(state.showDetails ? 'Save' : 'Add'),
-                      ),
-                    ],
-                  ),
+                              ),
+                    )
+                  else
+                    ..._entryFields(context, state, busy: busy),
                 ],
               ),
             ),
@@ -190,5 +130,95 @@ class _NewEntryBottomSheetState extends State<NewEntryBottomSheet> {
         );
       },
     );
+  }
+
+  /// The normal add form: URL, plus the details once they're revealed.
+  List<Widget> _entryFields(
+    BuildContext context,
+    NewEntryState state, {
+    required bool busy,
+  }) {
+    final theme = Theme.of(context);
+    final fromShare = widget.initialUrl != null;
+
+    return [
+      Text(
+        fromShare ? 'Save shared link' : 'New entry',
+        style: theme.textTheme.titleLarge,
+      ),
+      const SizedBox(height: 16),
+      EntryTextField(
+        controller: _urlController,
+        label: 'URL',
+        hint: 'https://...',
+        prefixIcon: Icons.link,
+        keyboardType: TextInputType.url,
+        textInputAction: state.showDetails
+            ? TextInputAction.next
+            : TextInputAction.done,
+        // A shared URL is already filled in — don't raise the
+        // keyboard just to confirm it.
+        autofocus: !fromShare,
+        enabled: !busy,
+        onSubmitted: (_) {
+          if (!busy && !state.showDetails) _submit();
+        },
+      ),
+      if (state.showDetails) ...[
+        const SizedBox(height: 12),
+        EntryTextField(
+          controller: _titleController,
+          label: 'Title',
+          enabled: !busy,
+        ),
+        const SizedBox(height: 12),
+        EntryTextField(
+          controller: _chapterController,
+          label: 'Chapter',
+          hint: 'e.g. 48',
+          enabled: !busy,
+        ),
+        const SizedBox(height: 12),
+        EntryTextField(
+          controller: _tagsController,
+          label: 'Tags',
+          hint: 'comma, separated',
+          enabled: !busy,
+        ),
+      ],
+      if (state.errorMessage != null) ...[
+        const SizedBox(height: 12),
+        Text(
+          state.errorMessage!,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.error,
+          ),
+        ),
+      ],
+      const SizedBox(height: 20),
+      Row(
+        children: [
+          if (!state.showDetails)
+            TextButton(
+              onPressed: busy
+                  ? null
+                  : () => context.read<NewEntryBloc>().add(
+                      const NewEntryEvent.detailsRequested(),
+                    ),
+              child: const Text('Add details manually'),
+            ),
+          const Spacer(),
+          FilledButton(
+            onPressed: busy ? null : _submit,
+            child: busy
+                ? const SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text(state.showDetails ? 'Save' : 'Add'),
+          ),
+        ],
+      ),
+    ];
   }
 }

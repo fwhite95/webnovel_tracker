@@ -27,14 +27,17 @@ class Entries extends Table {
   TextColumn get id => text()();
 
   TextColumn get url => text()();
+
+  /// The series on its own, with any chapter marker split off into [chapter].
   TextColumn get title => text()();
+
+  /// Reading position, e.g. "48" or "12.5". Empty when unknown — chapter
+  /// markers don't appear on every page title, and manual entries may skip it.
+  TextColumn get chapter => text().withDefault(const Constant(''))();
 
   /// Tags / collection labels, JSON-encoded via [TagListConverter].
   TextColumn get tags =>
       text().map(const TagListConverter()).withDefault(const Constant('[]'))();
-
-  /// Free-text progress note, e.g. "ch. 47".
-  TextColumn get progressNote => text().withDefault(const Constant(''))();
 
   DateTimeColumn get dateAdded => dateTime()();
 
@@ -50,7 +53,18 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _open());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onUpgrade: (m, from, to) async {
+      // v2 swapped the free-text progressNote for a dedicated chapter column.
+      // Everything stored under v1 was test data, so recreate the table rather
+      // than carry it across.
+      await m.drop(entries);
+      await m.createAll();
+    },
+  );
 
   static QueryExecutor _open() => driftDatabase(name: 'webnovel_tracker');
 

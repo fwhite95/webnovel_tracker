@@ -53,6 +53,15 @@ class EntryCard extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
+                    if (entry.chapter.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        'Chapter ${entry.chapter}',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colors.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                     if (entry.url.isNotEmpty) ...[
                       const SizedBox(height: 4),
                       Row(

@@ -19,6 +19,10 @@ class EntryRepository {
 
   Future<Entry?> byId(String id) => _db.getEntry(id);
 
+  /// One-shot read of every entry. Used where a stream would be overkill, e.g.
+  /// the duplicate check run once per save.
+  Future<List<Entry>> all() => _db.getAllEntries();
+
   /// Inserts or updates an entry.
   Future<void> upsert(Entry entry) => _db.upsertEntry(entry.toCompanion(true));
 
@@ -35,7 +39,7 @@ class EntryRepository {
 
   // --- Backup helpers (used by BackupService) -------------------------------
 
-  Future<List<Entry>> allForExport() => _db.getAllEntries();
+  Future<List<Entry>> allForExport() => all();
 
   /// Replaces the entire store with [items].
   Future<void> replaceAll(List<Entry> items) async {

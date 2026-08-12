@@ -1,18 +1,24 @@
 import 'package:http/http.dart' as http;
+import 'package:webnovel_tracker/shared/utils/entry_utils.dart';
 
-/// One-off, client-side fetch of a page's `<title>` to pre-fill the title
-/// field when adding an entry. Offline-first: callers should treat failure as
-/// "no title" and fall back to the URL / manual entry.
+/// One-off, client-side fetch of a page's `<title>`, split into the series and
+/// the chapter it is on. Offline-first: callers should treat failure as "no
+/// title" and fall back to the URL / manual entry.
+///
+/// There is no markup that states a chapter directly — the number is carried
+/// in the title text ("Chapter 48 - Series") or the URL slug, so it comes out
+/// of parsing the one response rather than a request of its own.
 class TitleFetcher {
   const TitleFetcher();
 
   static const _timeout = Duration(seconds: 8);
   static const _userAgent = 'Mozilla/5.0 (compatible; WebNovelTracker/1.0)';
 
-  /// Fetches [url] and returns the trimmed contents of its `<title>` tag, or
+  /// Fetches [url] and returns its title split into series and chapter, or
   /// null if the URL is invalid, the request fails or times out, or the page
-  /// has no title. All errors are swallowed.
-  Future<String?> fetchTitle(String url) async {
+  /// has no title. `chapter` is empty when neither the title nor the URL says
+  /// what chapter this is. All errors are swallowed.
+  Future<TitleParts?> fetch(String url) async {
     final uri = Uri.tryParse(url.trim());
     if (uri == null || !uri.isAbsolute) return null;
 
@@ -32,7 +38,13 @@ class TitleFetcher {
       if (raw == null) return null;
 
       final title = _unescapeHtml(_collapseWhitespace(raw));
-      return title.isEmpty ? null : title;
+      if (title.isEmpty) return null;
+
+      final parts = splitTitle(title);
+      // Plenty of sites put the chapter only in the path.
+      return parts.chapter.isEmpty
+          ? (title: parts.title, chapter: chapterInUrl(url))
+          : parts;
     } catch (_) {
       return null;
     }
