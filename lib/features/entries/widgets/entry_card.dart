@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:webnovel_tracker/data/database/app_database.dart';
 
 /// A single entry rendered as a card: title, url, tag chips, date added.
@@ -38,14 +40,14 @@ class EntryCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
-          child: Row(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
                       entry.title,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -53,57 +55,7 @@ class EntryCard extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    if (entry.chapter.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        'Chapter ${entry.chapter}',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: colors.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                    if (entry.url.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(Icons.link, size: 16, color: colors.primary),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              entry.url,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: colors.primary,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                    if (entry.tags.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
-                        children: [
-                          for (final tag in entry.tags) _TagChip(label: tag),
-                        ],
-                      ),
-                    ],
-                    const SizedBox(height: 8),
-                    Text(
-                      'Added ${DateFormat.yMMMd().format(entry.dateAdded)}',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colors.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
+                  ),
                   IconButton(
                     onPressed: onEdit,
                     tooltip: 'Edit',
@@ -121,6 +73,76 @@ class EntryCard extends StatelessWidget {
                     color: colors.onSurfaceVariant,
                   ),
                 ],
+              ),
+              if (entry.chapter.isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text(
+                  'Chapter ${entry.chapter}',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
+              ],
+              if (entry.url.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.link, size: 16, color: colors.primary),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: InkWell(
+                        child: Text(
+                          entry.url,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colors.primary,
+                          ),
+                        ),
+                        onTap: () async {
+                          await launchUrl(Uri.parse(entry.url));
+                        },
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () async {
+                        await Clipboard.setData(
+                          ClipboardData(text: entry.url),
+                        );
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Link copied'),
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                      },
+                      tooltip: 'Copy link',
+                      icon: Icon(Icons.copy, size: 20, color: colors.primary),
+                      iconSize: 20,
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ],
+                ),
+              ],
+              if (entry.tags.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    for (final tag in entry.tags) _TagChip(label: tag),
+                  ],
+                ),
+              ],
+              const SizedBox(height: 8),
+              Text(
+                'Added ${DateFormat.yMMMd().format(entry.dateAdded)}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colors.onSurfaceVariant,
+                ),
               ),
             ],
           ),
