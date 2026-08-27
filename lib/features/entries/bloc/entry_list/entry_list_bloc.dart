@@ -7,12 +7,12 @@ import 'package:webnovel_tracker/features/entries/bloc/entry_list/entry_list_eve
 import 'package:webnovel_tracker/features/entries/bloc/entry_list/entry_list_state.dart';
 
 /// Drives the home list: subscribes to the repository stream, and applies
-/// sort / tag-filter changes. Depends only on [EntryRepository].
+/// sort / search changes. Depends only on [EntryRepository].
 class EntryListBloc extends Bloc<EntryListEvent, EntryListState> {
   EntryListBloc(this._repository) : super(const EntryListState.loading()) {
     on<EntryListStarted>(_onStarted);
     on<EntryListSortChanged>(_onSortChanged);
-    on<EntryListTagFilterChanged>(_onTagFilterChanged);
+    on<EntryListSearchQueryChanged>(_onSearchQueryChanged);
     on<EntryListDataUpdated>(_onDataUpdated);
     on<EntryListEntryOpened>(_onEntryOpened);
     on<EntryListEntryDeleted>(_onEntryDeleted);
@@ -25,7 +25,7 @@ class EntryListBloc extends Bloc<EntryListEvent, EntryListState> {
 
   List<Entry> _all = const [];
   EntrySort _sort = EntrySort.lastOpened;
-  String? _tagFilter;
+  String _searchQuery = '';
 
   Future<void> _onStarted(
     EntryListStarted event,
@@ -45,11 +45,11 @@ class EntryListBloc extends Bloc<EntryListEvent, EntryListState> {
     emit(_buildLoaded());
   }
 
-  Future<void> _onTagFilterChanged(
-    EntryListTagFilterChanged event,
+  Future<void> _onSearchQueryChanged(
+    EntryListSearchQueryChanged event,
     Emitter<EntryListState> emit,
   ) async {
-    _tagFilter = event.tag;
+    _searchQuery = event.query;
     emit(_buildLoaded());
   }
 
@@ -86,27 +86,34 @@ class EntryListBloc extends Bloc<EntryListEvent, EntryListState> {
   }
 
   EntryListLoaded _buildLoaded() {
-    final allTags = <String>{for (final e in _all) ...e.tags}.toList()..sort();
+    Iterable<Entry> visible = _all;
 
-    List<Entry> visible = _tagFilter == null
-        ? _all
-        : _all.where((e) => e.tags.contains(_tagFilter)).toList();
+    final query = _searchQuery.trim().toLowerCase();
+    if (query.isNotEmpty) {
+      visible = visible.where(
+        (e) =>
+            e.title.toLowerCase().contains(query) ||
+            e.tags.any((t) => t.toLowerCase().contains(query)),
+      );
+    }
 
-    visible = [...visible]
+    final sorted = visible.toList()
       ..sort(
         (a, b) => switch (_sort) {
           EntrySort.lastOpened => (b.lastOpened ?? b.dateAdded).compareTo(
             a.lastOpened ?? a.dateAdded,
           ),
           EntrySort.dateAdded => b.dateAdded.compareTo(a.dateAdded),
+          EntrySort.title => a.title.toLowerCase().compareTo(
+            b.title.toLowerCase(),
+          ),
         },
       );
 
     return EntryListLoaded(
-      entries: visible,
-      allTags: allTags,
+      entries: sorted,
+      totalCount: _all.length,
       sort: _sort,
-      tagFilter: _tagFilter,
     );
   }
 

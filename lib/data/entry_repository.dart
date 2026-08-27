@@ -2,7 +2,7 @@ import 'package:drift/drift.dart' show Value;
 import 'package:webnovel_tracker/data/database/app_database.dart';
 
 /// How to order the entry list.
-enum EntrySort { lastOpened, dateAdded }
+enum EntrySort { lastOpened, dateAdded, title }
 
 /// Domain-facing wrapper over [AppDatabase]. Blocs depend on this, not on
 /// Drift directly, so the persistence layer can change without touching them.

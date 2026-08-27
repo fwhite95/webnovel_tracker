@@ -12,8 +12,8 @@ sealed class EntryListEvent with _$EntryListEvent {
   const factory EntryListEvent.sortChanged(EntrySort sort) =
       EntryListSortChanged;
 
-  const factory EntryListEvent.tagFilterChanged(String? tag) =
-      EntryListTagFilterChanged;
+  const factory EntryListEvent.searchQueryChanged(String query) =
+      EntryListSearchQueryChanged;
 
   /// Internal: new data arrived from the repository stream.
   const factory EntryListEvent.dataUpdated(List<Entry> entries) =

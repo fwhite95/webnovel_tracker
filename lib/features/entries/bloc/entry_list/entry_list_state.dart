@@ -10,9 +10,8 @@ sealed class EntryListState with _$EntryListState {
 
   const factory EntryListState.loaded({
     required List<Entry> entries,
-    required List<String> allTags,
+    required int totalCount,
     @Default(EntrySort.lastOpened) EntrySort sort,
-    String? tagFilter,
   }) = EntryListLoaded;
 
   const factory EntryListState.error(String message) = EntryListError;

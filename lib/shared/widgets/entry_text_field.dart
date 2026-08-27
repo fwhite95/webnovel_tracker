@@ -18,6 +18,7 @@ class EntryTextField extends StatelessWidget {
     this.maxLines = 1,
     this.prefixIcon,
     this.onSubmitted,
+    this.onChanged,
   });
 
   final TextEditingController controller;
@@ -30,6 +31,7 @@ class EntryTextField extends StatelessWidget {
   final int maxLines;
   final IconData? prefixIcon;
   final ValueChanged<String>? onSubmitted;
+  final ValueChanged<String>? onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -41,6 +43,7 @@ class EntryTextField extends StatelessWidget {
       enabled: enabled,
       maxLines: maxLines,
       onSubmitted: onSubmitted,
+      onChanged: onChanged,
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
